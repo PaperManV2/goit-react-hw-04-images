@@ -13,7 +13,6 @@ const secretKey = '35496971-fbfc726ccc8da9a7b0725eb09';
 export const App = () => {
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [SelectedPicture, setSelectedPicture] = useState('');
   const [query, setQuery] = useState('');
