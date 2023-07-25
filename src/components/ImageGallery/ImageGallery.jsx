@@ -30,3 +30,5 @@ const ImageGalleryItem = ({ webFormatURL, onClick }) => {
     </li>
   );
 };
+
+export default ImageGallery;

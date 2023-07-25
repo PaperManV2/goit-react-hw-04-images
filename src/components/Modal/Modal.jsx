@@ -13,3 +13,5 @@ export const Modal = ({ largeImageURL, hideModal }) => {
     </div>
   );
 };
+
+export default Modal;

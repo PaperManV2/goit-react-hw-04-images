@@ -13,3 +13,5 @@ export const Button = ({ handleLoadMore }) => {
     </div>
   );
 };
+
+export default Button;

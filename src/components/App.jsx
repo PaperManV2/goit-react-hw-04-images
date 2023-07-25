@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import css from './App.module.css';
 import Notiflix from 'notiflix';
 
@@ -10,39 +10,38 @@ import { Modal } from './Modal/Modal';
 
 const secretKey = '35496971-fbfc726ccc8da9a7b0725eb09';
 
-export class App extends Component {
-  constructor(Props) {
-    super(Props);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleModal = this.handleModal.bind(this);
-    this.hideModal = this.hideModal.bind(this);
-    this.handleLoadMore = this.handleLoadMore.bind(this);
-  }
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [SelectedPicture, setSelectedPicture] = useState('');
+  const [query, setQuery] = useState('');
 
-  state = {
-    images: [],
-    isLoading: false,
-    error: '',
-    currentPage: 1,
-    SelectedPicture: '',
-    query: '',
-  };
-
-  async componentDidMount() {
-    const images = await this.getImages('', 1);
-    this.setState({ images });
+  useEffect(() => {
+    async function fetchData() {
+      const img = await getImages('', 1);
+      setImages(img);
+    }
+    fetchData();
 
     document.addEventListener('keydown', e => {
       if (e.code === 'Escape') {
-        this.setState({ SelectedPicture: '' });
+        setSelectedPicture('');
       }
     });
-  }
 
-  async componentDidUpdate() {}
+    return () => {
+      document.removeEventListener('keydown', e => {
+        if (e.code === 'Escape') {
+          setSelectedPicture('');
+        }
+      });
+    };
+  }, []);
 
-  getImages = async (query, page) => {
-    this.setState({ isLoading: true });
+  const getImages = async (query, page) => {
+    setIsLoading(true);
 
     const response = await fetch(
       `https://pixabay.com/api/?q=${query}&page=${page}&key=${secretKey}&image_type=photo&orientation=horizontal&per_page=12`
@@ -57,73 +56,59 @@ export class App extends Component {
     if (result.total === 0) {
       Notiflix.Notify.failure('Oops, there is no pictures with that name');
     }
-    this.setState({ isLoading: false });
+    setIsLoading(false);
     return result.hits;
   };
 
-  handleSubmit = async event => {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const form = event.currentTarget;
     const formQuery = form.elements.query.value;
 
     if (formQuery !== '') {
-      const images = await this.getImages(formQuery, 1);
-      this.setState({ images, query: formQuery });
+      const img = await getImages(formQuery, 1);
+      setImages(img);
+      setQuery(formQuery);
     } else {
       Notiflix.Notify.failure('Oops, there are no pictures with that name');
     }
-  };
-
-  handleModal(URL) {
-    this.setState({ SelectedPicture: URL });
   }
 
-  hideModal() {
-    this.setState({ SelectedPicture: '' });
+  function handleModal(URL) {
+    setSelectedPicture(URL);
   }
 
-  handleLoadMore() {
-    this.setState(
-      prevState => ({ currentPage: prevState.currentPage + 1 }),
-      async () => {
-        const images = await this.getImages(
-          this.state.query,
-          this.state.currentPage
-        );
-
-        const prevImages = this.state.images;
-
-        this.setState({ images: [] });
-        this.setState({ images: [...prevImages, ...images] });
-      }
-    );
+  function hideModal() {
+    setSelectedPicture('');
   }
 
-  render() {
-    const { images, isLoading, SelectedPicture } = this.state;
+  async function handleLoadMore() {
+    setCurrentPage(currentPage + 1);
 
-    return (
-      <div className={css.App}>
-        {' '}
-        <Searchbar submit={this.handleSubmit} />
-        {images.length > 0 ? (
-          <ImageGallery images={images} onClick={this.handleModal} />
-        ) : (
-          ''
-        )}
-        {isLoading ? <Loader /> : ''}
-        {images.length > 0 ? (
-          <Button handleLoadMore={this.handleLoadMore} />
-        ) : (
-          ''
-        )}
-        {SelectedPicture !== '' ? (
-          <Modal largeImageURL={SelectedPicture} hideModal={this.hideModal} />
-        ) : (
-          ''
-        )}
-      </div>
-    );
+    const img = await getImages(query, currentPage);
+
+    const prevImages = images;
+
+    setImages([]);
+    setImages([...prevImages, ...img]);
   }
-}
+
+  return (
+    <div className={css.App}>
+      <Searchbar submit={handleSubmit} />
+      {images.length > 0 ? (
+        <ImageGallery images={images} onClick={handleModal} />
+      ) : (
+        ''
+      )}
+      {isLoading ? <Loader /> : ''}
+      {images.length > 0 ? <Button handleLoadMore={handleLoadMore} /> : ''}
+      {SelectedPicture !== '' ? (
+        <Modal largeImageURL={SelectedPicture} hideModal={hideModal} />
+      ) : (
+        ''
+      )}
+    </div>
+  );
+};

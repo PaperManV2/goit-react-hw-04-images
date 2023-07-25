@@ -20,3 +20,5 @@ export const Searchbar = ({ submit }) => {
     </header>
   );
 };
+
+export default Searchbar;
